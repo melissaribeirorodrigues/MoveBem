@@ -23,9 +23,9 @@ class Banco
 
     function Abre_Banco($p_Driver, $p_Host, $p_Porta, $p_User, $p_Password, $p_Database) 
     {   
-        $this->User     = $p_User     ?? "melissarodrigues";
-        $this->Password = $p_Password ?? "123456";
-        $this->Database = $p_Database ?? "melissarodrigues";
+        $this->User     = $p_User     ?? "user_name";
+        $this->Password = $p_Password ?? "password";
+        $this->Database = $p_Database ?? "user_name";
         $this->Host     = $this->setHost($p_Host);
         $this->Driver   = $p_Driver   ?? "pgsql";
         $this->Porta    = $p_Porta    ?? "5432";
