@@ -1,0 +1,51 @@
+# Flutter/Dart
+flutter_movebem/.dart_tool/
+flutter_movebem/.flutter-plugins
+flutter_movebem/.flutter-plugins-dependencies
+flutter_movebem/.packages
+flutter_movebem/build/
+flutter_movebem/.pub-cache/
+flutter_movebem/.pub/
+
+# Android
+flutter_movebem/android/app/*.iml
+flutter_movebem/android/*.iml
+flutter_movebem/android/.gradle
+flutter_movebem/android/local.properties
+flutter_movebem/android/captures/
+flutter_movebem/android/gradle/
+flutter_movebem/android/gradlew
+flutter_movebem/android/gradlew.bat
+
+# iOS
+flutter_movebem/ios/Pods/
+flutter_movebem/ios/.symlinks/
+flutter_movebem/ios/Flutter/Flutter.framework
+flutter_movebem/ios/Flutter/Flutter.podspec
+
+# Web
+flutter_movebem/web/flutter_service_worker.js
+
+# Windows
+flutter_movebem/windows/flutter/
+
+# macOS
+flutter_movebem/macos/Flutter/
+
+# Linux
+flutter_movebem/linux/flutter/
+
+# PHP/Backend
+config.php
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Outros
+.DS_Store
+Thumbs.db

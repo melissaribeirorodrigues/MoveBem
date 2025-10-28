@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoveBem - Teste de Exercícios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF70A8 0%, #FF8FB8 50%, #FFB3C8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(255, 112, 168, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #FF70A8, #FF8FB8);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(50px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(255, 112, 168, 0.1);
+            overflow: hidden;
+            border: 2px solid #FFE4ED;
+        }
+
+        .section-header {
+            background: linear-gradient(90deg, #FF70A8, #FF8FB8);
+            color: white;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-content {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #FF70A8;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #FFB3D1;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #FFEEF5;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #FF70A8;
+            box-shadow: 0 0 0 3px rgba(255, 112, 168, 0.2);
+            background: white;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF70A8, #FF8FB8);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 112, 168, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 112, 168, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .response-area {
+            background: #FFEEF5;
+            border: 2px solid #FFB3D1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .url-display {
+            background: #FF70A8;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #FFB3D1;
+            border-radius: 50%;
+            border-top-color: #FF70A8;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .exercise-list {
+            background: #FFEEF5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .exercise-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 4px solid #FF70A8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MoveBem - Exercícios</h1>
+            <p>Teste das APIs de Exercícios e Rotina-Exercício</p>
+        </div>
+
+        <div class="content">
+            <!-- URL Display -->
+            <div class="url-display" id="currentUrl">
+                <span class="status-indicator status-online"></span>
+                Detectando ambiente...
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="grid">
+                <!-- Exercícios -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="emoji"></span>
+                        Gerenciar Exercícios
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Operação:</label>
+                            <select id="operacaoExercicio">
+                                <option value="Listar">Listar Exercícios</option>
+                                <option value="Inserir">Inserir Exercício</option>
+                                <option value="Consultar">Consultar Exercício</option>
+                                <option value="Alterar">Alterar Exercício</option>
+                                <option value="Excluir">Excluir Exercício</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="idExercicioGroup" style="display:none;">
+                            <label>Exercício:</label>
+                            <select id="idExercicio">
+                                <option value="">Carregue a lista primeiro...</option>
+                            </select>
+                            <button class="btn" onclick="carregarExercicios()" style="margin-top: 5px; padding: 8px 15px; font-size: 12px;">
+                                Carregar Exercícios
+                            </button>
+                        </div>
+
+                        <div class="form-group" id="nomeExercicioGroup" style="display:none;">
+                            <label>Nome do Exercício:</label>
+                            <input type="text" id="nomeExercicio" placeholder="Ex: Corrida, Flexão">
+                        </div>
+
+                        <div class="form-group" id="descExercicioGroup" style="display:none;">
+                            <label>Descrição (opcional):</label>
+                            <textarea id="descExercicio" rows="3" placeholder="Descrição do exercício"></textarea>
+                        </div>
+
+                        <div class="form-group" id="duracaoGroup" style="display:none;">
+                            <label>Duração (minutos):</label>
+                            <input type="number" id="duracao" placeholder="Ex: 30" min="1">
+                        </div>
+
+                        <button class="btn" onclick="executarExercicio()">
+                            <span class="emoji"></span> Executar
+                        </button>
+                        <button class="btn" onclick="carregarListaExercicios()">
+                            <span class="emoji"></span> Ver Lista
+                        </button>
+                        <button class="btn" onclick="limparExercicio()">
+                            <span class="emoji"></span> Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rotina-Exercício -->
+                <div class="section">
+                    <div class="section-header">
+                        <span class="emoji"></span>
+                        Rotina-Exercício
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Operação:</label>
+                            <select id="operacaoRotinaExercicio">
+                                <option value="Listar">Listar por Rotina</option>
+                                <option value="Inserir">Adicionar à Rotina</option>
+                                <option value="Excluir">Remover da Rotina</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Rotina:</label>
+                            <select id="idRotina">
+                                <option value="">Carregue a lista primeiro...</option>
+                            </select>
+                            <button class="btn" onclick="carregarRotinas()" style="margin-top: 5px; padding: 8px 15px; font-size: 12px;">
+                                Carregar Rotinas
+                            </button>
+                        </div>
+
+                        <div class="form-group" id="idExercicioRotinaGroup" style="display:none;">
+                            <label>Exercício:</label>
+                            <select id="idExercicioRotina">
+                                <option value="">Carregue a lista primeiro...</option>
+                            </select>
+                            <button class="btn" onclick="carregarExerciciosRotina()" style="margin-top: 5px; padding: 8px 15px; font-size: 12px;">
+                                Carregar Exercícios
+                            </button>
+                        </div>
+
+                        <button class="btn" onclick="executarRotinaExercicio()">
+                            <span class="emoji"></span> Executar
+                        </button>
+                        <button class="btn" onclick="verRotinasComExercicios()">
+                            <span class="emoji"></span> Ver Rotinas
+                        </button>
+                        <button class="btn" onclick="limparRotinaExercicio()">
+                            <span class="emoji"></span> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Areas -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="emoji"></span>
+                    Resultado - Exercícios
+                </div>
+                <div class="section-content">
+                    <div class="response-area" id="responseExercicio">Nenhuma operação executada ainda...</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="emoji">🔧</span>
+                    Resultado - Rotina-Exercício
+                </div>
+                <div class="section-content">
+                    <div class="response-area" id="responseRotinaExercicio">Nenhuma operação executada ainda...</div>
+                </div>
+            </div>
+
+            <!-- Ferramentas de Cache -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="emoji">🛠️</span>
+                    Ferramentas de Cache
+                </div>
+                <div class="section-content">
+                    <button class="btn" onclick="limparCache()" style="background: #17a2b8;">
+                        🧹 Limpar Cache
+                    </button>
+                    <button class="btn" onclick="forcarReload()" style="background: #28a745;">
+                        🔄 Forçar Reload
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let baseUrl = '';
+
+        // Detecta o ambiente e define a URL base
+        function detectarAmbiente() {
+            const hostname = window.location.hostname;
+            const origin = window.location.origin;
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                baseUrl = 'http://localhost/MoveBem/Controller/';
+                document.getElementById('currentUrl').innerHTML = 
+                    '<span class="status-indicator status-online"></span>💻 LOCALHOST: ' + baseUrl;
+            } else if (hostname === '192.168.20.19') {
+                baseUrl = origin + '/usuario03/MoveBem/Controller/';
+                document.getElementById('currentUrl').innerHTML = 
+                    '<span class="status-indicator status-online"></span>🏢 SERVIDOR INTERNO: ' + baseUrl;
+            } else if (hostname === '200.19.1.19') {
+                baseUrl = origin + '/usuario03/MoveBem/Controller/';
+                document.getElementById('currentUrl').innerHTML = 
+                    '<span class="status-indicator status-online"></span>🌐 SERVIDOR EXTERNO: ' + baseUrl;
+            } else {
+                baseUrl = origin + '/usuario03/MoveBem/Controller/';
+                document.getElementById('currentUrl').innerHTML = 
+                    '<span class="status-indicator status-online"></span>❓ SERVIDOR: ' + baseUrl;
+            }
+        }
+
+        // Função universal para requisições com cache buster
+        async function fazerRequest(url, formData) {
+            const timestamp = Date.now();
+            const randomId = Math.random().toString(36).substring(7);
+            const urlComCache = `${url}?_t=${timestamp}&_r=${randomId}`;
+            
+            return fetch(urlComCache, {
+                method: 'POST',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                },
+                body: formData
+            });
+        }
+
+        // Controla visibilidade dos campos baseado na operação
+        function toggleFieldsExercicio() {
+            const operacao = document.getElementById('operacaoExercicio').value;
+            const idGroup = document.getElementById('idExercicioGroup');
+            const nomeGroup = document.getElementById('nomeExercicioGroup');
+            const descGroup = document.getElementById('descExercicioGroup');
+            const duracaoGroup = document.getElementById('duracaoGroup');
+
+            // Reset
+            idGroup.style.display = 'none';
+            nomeGroup.style.display = 'none';
+            descGroup.style.display = 'none';
+            duracaoGroup.style.display = 'none';
+
+            switch(operacao) {
+                case 'Listar': // Listar
+                    break;
+                case 'Inserir': // Inserir
+                    nomeGroup.style.display = 'block';
+                    descGroup.style.display = 'block';
+                    duracaoGroup.style.display = 'block';
+                    break;
+                case 'Consultar': // Consultar
+                case 'Excluir': // Excluir
+                    idGroup.style.display = 'block';
+                    break;
+                case 'Alterar': // Alterar
+                    idGroup.style.display = 'block';
+                    nomeGroup.style.display = 'block';
+                    descGroup.style.display = 'block';
+                    duracaoGroup.style.display = 'block';
+                    break;
+            }
+        }
+
+        function toggleFieldsRotinaExercicio() {
+            const operacao = document.getElementById('operacaoRotinaExercicio').value;
+            const idExercicioGroup = document.getElementById('idExercicioRotinaGroup');
+
+            if (operacao === 'Inserir' || operacao === 'Excluir') {
+                idExercicioGroup.style.display = 'block';
+            } else {
+                idExercicioGroup.style.display = 'none';
+            }
+        }
+
+        // Executar operação de exercício
+        async function executarExercicio() {
+            const operacao = document.getElementById('operacaoExercicio').value;
+            const responseDiv = document.getElementById('responseExercicio');
+            
+            responseDiv.innerHTML = '<div class="loading"></div>Processando...';
+
+            let formData = new FormData();
+            formData.append('oper', operacao);
+
+            // Adiciona campos conforme a operação
+            if (operacao === 'Inserir' || operacao === 'Alterar') {
+                formData.append('nm_exercicio', document.getElementById('nomeExercicio').value);
+                formData.append('ds_exercicio', document.getElementById('descExercicio').value);
+                formData.append('vl_duracao', document.getElementById('duracao').value);
+            }
+
+            if (operacao === 'Consultar' || operacao === 'Alterar' || operacao === 'Excluir') {
+                formData.append('id_exercicio', document.getElementById('idExercicio').value);
+            }
+
+            try {
+                const response = await fazerRequest(baseUrl + 'CrudExercicio.php', formData);
+                const data = await response.json();
+                responseDiv.innerHTML = formatarResposta(data, 'exercicio');
+            } catch (error) {
+                responseDiv.innerHTML = `<span class="error">❌ Erro: ${error.message}</span>`;
+            }
+        }
+
+        // Executar operação de rotina-exercício
+        async function executarRotinaExercicio() {
+            const operacao = document.getElementById('operacaoRotinaExercicio').value;
+            const responseDiv = document.getElementById('responseRotinaExercicio');
+            
+            responseDiv.innerHTML = '<div class="loading"></div>Processando...';
+
+            let formData = new FormData();
+            formData.append('oper', operacao);
+            formData.append('id_rotina', document.getElementById('idRotina').value);
+
+            if (operacao === 'Inserir' || operacao === 'Excluir') {
+                formData.append('id_exercicio', document.getElementById('idExercicioRotina').value);
+            }
+
+            try {
+                const response = await fetch(baseUrl + 'CrudRotinaExercicio.php?' + Math.random(), {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                responseDiv.innerHTML = formatarResposta(data, 'rotina-exercicio');
+            } catch (error) {
+                responseDiv.innerHTML = `<span class="error">❌ Erro: ${error.message}</span>`;
+            }
+        }
+
+        // Formatar resposta JSON
+        function formatarResposta(data, tipo) {
+            let html = `<div class="${data.NumMens ? 'success' : 'error'}">`;
+            html += `${data.NumMens ? 'SUCESSO' : 'ERRO'} ${data.Mensagem}`;
+
+            if (data.dados && Array.isArray(data.dados) && data.dados.length > 0) {
+                html += `<div style="margin-top: 15px;">`;
+                
+                if (tipo === 'exercicio') {
+                    data.dados.forEach((item) => {
+                        html += `<div style="padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 5px;">`;
+                        html += `<strong>${item.nm_exercicio}</strong> <span style="color: #666;">(${item.vl_duracao || 0}min)</span>`;
+                        html += `</div>`;
+                    });
+                } else if (tipo === 'rotina-exercicio') {
+                    data.dados.forEach((item) => {
+                        html += `<div style="padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 5px;">`;
+                        html += `<strong>${item.nm_exercicio}</strong> - <em>${item.nm_rotina || 'Rotina'}</em> <span style="color: #666;">(${item.vl_duracao || 0}min)</span>`;
+                        html += `</div>`;
+                    });
+                }
+                
+                html += `</div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // Carregar dados para os dropdowns
+        async function carregarExercicios() {
+            try {
+                const response = await fetch(baseUrl + 'CrudExercicio.php?' + Math.random(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ oper: 'Listar' })
+                });
+                const data = await response.json();
+                
+                const select = document.getElementById('idExercicio');
+                select.innerHTML = '<option value="">Selecione um exercício...</option>';
+                
+                if (data.dados && data.dados.length > 0) {
+                    data.dados.forEach(exercicio => {
+                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}min)</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Nenhum exercício encontrado</option>';
+                }
+            } catch (error) {
+                document.getElementById('idExercicio').innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function carregarExerciciosRotina() {
+            try {
+                const response = await fetch(baseUrl + 'CrudExercicio.php?' + Math.random(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ oper: 'Listar' })
+                });
+                const data = await response.json();
+                
+                const select = document.getElementById('idExercicioRotina');
+                select.innerHTML = '<option value="">Selecione um exercício...</option>';
+                
+                if (data.dados && data.dados.length > 0) {
+                    data.dados.forEach(exercicio => {
+                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}min)</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Nenhum exercício encontrado</option>';
+                }
+            } catch (error) {
+                document.getElementById('idExercicioRotina').innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function carregarRotinas() {
+            try {
+                const response = await fetch(baseUrl + 'CrudRotina.php?' + Math.random(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ oper: 'Listar' })
+                });
+                const data = await response.json();
+                
+                const select = document.getElementById('idRotina');
+                select.innerHTML = '<option value="">Selecione uma rotina...</option>';
+                
+                if (data.dados && data.dados.length > 0) {
+                    data.dados.forEach(rotina => {
+                        if (rotina.nm_rotina && rotina.nm_rotina.trim()) {
+                            select.innerHTML += `<option value="${rotina.id_rotina}">${rotina.nm_rotina}</option>`;
+                        }
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Nenhuma rotina encontrada</option>';
+                }
+            } catch (error) {
+                document.getElementById('idRotina').innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        // Funções de visualização rápida
+        async function carregarListaExercicios() {
+            try {
+                const response = await fetch(baseUrl + 'CrudExercicio.php?' + Math.random(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ oper: 'Listar' })
+                });
+                const data = await response.json();
+                
+                document.getElementById('responseExercicio').innerHTML = formatarResposta(data, 'exercicio');
+            } catch (error) {
+                document.getElementById('responseExercicio').innerHTML = `<div class="error">ERRO: ${error.message}</div>`;
+            }
+        }
+
+        async function verRotinasComExercicios() {
+            try {
+                const response = await fetch(baseUrl + 'CrudRotina.php?' + Math.random(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ oper: 'Listar' })
+                });
+                const data = await response.json();
+                
+                let html = `<div class="success">SUCESSO: ${data.registros} rotinas encontradas</div>`;
+                
+                if (data.dados && data.dados.length > 0) {
+                    html += '<div style="margin-top: 15px;">';
+                    
+                    data.dados.forEach((rotina) => {
+                        if (rotina.nm_rotina && rotina.nm_rotina.trim()) {
+                            html += `
+                                <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #FF70A8;">
+                                    <div style="font-size: 18px; font-weight: bold; color: #FF70A8; margin-bottom: 8px;">
+                                        ${rotina.nm_rotina}
+                                    </div>
+                            `;
+
+                            if (rotina.exercicios && rotina.exercicios.length > 0) {
+                                rotina.exercicios.forEach(exercicio => {
+                                    html += `
+                                        <div style="margin-left: 20px; padding: 5px 0; color: #666;">
+                                            - ${exercicio.nm_exercicio} <span style="color: #999;">(${exercicio.vl_duracao}min)</span>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                html += '<div style="margin-left: 20px; color: #999; font-style: italic;">Sem exercícios</div>';
+                            }
+
+                            html += '</div>';
+                        }
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                document.getElementById('responseRotinaExercicio').innerHTML = html;
+            } catch (error) {
+                document.getElementById('responseRotinaExercicio').innerHTML = `<div class="error">ERRO: ${error.message}</div>`;
+            }
+        }
+
+        // Limpar formulários
+        function limparExercicio() {
+            document.getElementById('idExercicio').value = '';
+            document.getElementById('nomeExercicio').value = '';
+            document.getElementById('descExercicio').value = '';
+            document.getElementById('duracao').value = '';
+            document.getElementById('responseExercicio').innerHTML = 'Formulário limpo...';
+        }
+
+        function limparRotinaExercicio() {
+            document.getElementById('idRotina').value = '';
+            document.getElementById('idExercicioRotina').value = '';
+            document.getElementById('responseRotinaExercicio').innerHTML = 'Formulário limpo...';
+        }
+
+        // Função para limpar cache do browser
+        function limparCache() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                
+                document.getElementById('responseExercicio').innerHTML = '🧹 Cache limpo! Recarregando em 2 segundos...';
+                setTimeout(() => window.location.reload(true), 2000);
+                
+            } catch (error) {
+                document.getElementById('responseExercicio').innerHTML = `❌ Erro ao limpar cache: ${error.message}`;
+            }
+        }
+
+        // Função para forçar reload completo
+        function forcarReload() {
+            document.getElementById('responseExercicio').innerHTML = '🔄 Forçando reload completo...';
+            setTimeout(() => window.location.reload(true), 500);
+        }
+
+        // Event listeners
+        document.getElementById('operacaoExercicio').addEventListener('change', toggleFieldsExercicio);
+        document.getElementById('operacaoRotinaExercicio').addEventListener('change', toggleFieldsRotinaExercicio);
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            detectarAmbiente();
+            toggleFieldsExercicio();
+            toggleFieldsRotinaExercicio();
+        });
+    </script>
+</body>
+</html>

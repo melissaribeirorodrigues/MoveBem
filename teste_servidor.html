@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste MoveBem API - Servidor</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #FF70A8 0%, #FF8BC0 100%); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #fafafa; }
+        button { padding: 12px 20px; margin: 5px; background: #FF70A8; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        button:hover { background: #E55A95; transform: translateY(-2px); }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; border: 1px solid #e9ecef; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group { margin: 10px 0; }
+        label { display: inline-block; width: 150px; font-weight: bold; }
+        h1 { color: #C1476C; text-align: center; margin-bottom: 30px; }
+        h2 { color: #B8406B; border-bottom: 2px solid #FF70A8; padding-bottom: 10px; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        .status-bar { padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MoveBem API - Teste no Servidor</h1>
+        
+        <div id="status-bar" class="status-bar info">
+            Inicializando testes...
+        </div>
+
+        <!-- Teste 1: Status da API -->
+        <div class="test-section">
+            <h2>1.Status da API</h2>
+            <p>Verifica se a API está funcionando e mostra informações básicas.</p>
+            <button onclick="testarStatus()">Testar Status</button>
+            <button onclick="diagnosticarConectividade()">Diagnosticar Conectividade</button>
+            <button onclick="encontrarURLCorreta()">Encontrar URL Correta</button>
+            <div id="status-result" class="result"></div>
+        </div>
+
+        <!-- Teste 2: Teste de Conexão com Banco -->
+        <div class="test-section">
+            <h2>2. Conexão com Banco</h2>
+            <p>Testa a conexão com o PostgreSQL.</p>
+            <button onclick="testarConexao()">Testar Conexão</button>
+            <div id="conexao-result" class="result"></div>
+        </div>
+
+        <!-- Teste 3: Listar Usuários -->
+        <div class="test-section">
+            <h2>3.Listar Usuários</h2>
+            <p>Lista todos os usuários cadastrados no sistema.</p>
+            <button onclick="listarUsuarios()">Listar Usuários</button>
+            <div id="listar-result" class="result"></div>
+        </div>
+
+        <!-- Teste 4: Cadastro de Usuário -->
+        <div class="test-section">
+            <h2>4.Cadastrar Usuário</h2>
+            <div class="form-group">
+                <label>Nome:</label>
+                <input type="text" id="nome-cadastro" value="Teste Servidor" />
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email-cadastro" value="teste.servidor@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="senha-cadastro" value="123456" />
+            </div>
+            <button onclick="cadastrarUsuario()">Cadastrar</button>
+            <div id="cadastro-result" class="result"></div>
+        </div>
+
+        <!-- Teste 5: Login -->
+        <div class="test-section">
+            <h2>5.Login</h2>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email-login" value="teste.servidor@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="senha-login" value="123456" />
+            </div>
+            <button onclick="fazerLogin()">Login</button>
+            <div id="login-result" class="result"></div>
+        </div>
+
+        <!-- Teste 6: Teste Completo -->
+        <div class="test-section">
+            <h2>6.Teste Automático Completo</h2>
+            <p>Executa todos os testes em sequência.</p>
+            <button onclick="testeCompleto()" id="btn-completo">Executar Teste Completo</button>
+            <button onclick="limparCache()" style="background: #17a2b8;">🧹 Limpar Cache</button>
+            <button onclick="forcarReload()" style="background: #28a745;">🔄 Forçar Reload</button>
+            <div id="completo-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Detecta automaticamente a URL base
+        const BASE_URL = window.location.origin + window.location.pathname.replace('/teste_servidor.html', '');
+        
+        // URLs possíveis para testar baseadas no servidor atual
+        function getUrlsParaTestar() {
+            const hostname = window.location.hostname;
+            const origin = window.location.origin;
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return [
+                    'http://localhost/MoveBem',
+                    BASE_URL
+                ];
+            } else {
+                return [
+                    origin + '/MoveBem',
+                    origin + '/movebem',
+                    origin + '/~usuario03/MoveBem',
+                    origin + '/usuario03/MoveBem',
+                    origin + '/public_html/MoveBem'
+                ];
+            }
+        }
+
+        // Função para testar múltiplas URLs
+        async function encontrarURLCorreta() {
+            atualizarStatus('Procurando URL correta...', 'info');
+            
+            const urlsParaTestar = getUrlsParaTestar();
+            
+            for (let url of urlsParaTestar) {
+                try {
+                    const response = await fetch(url + '/');
+                    if (response.ok) {
+                        atualizarStatus(`URL encontrada: ${url}`, 'success');
+                        return url;
+                    }
+                } catch (error) {
+                    console.log(`Falhou: ${url}`);
+                }
+            }
+
+            atualizarStatus('Nenhuma URL válida encontrada', 'error');
+            return null;
+        }
+
+        // Função para determinar qual URL usar
+        function getAPIUrl() {
+            // Detecta automaticamente baseado na URL atual
+            const hostname = window.location.hostname;
+            const origin = window.location.origin;
+            
+            // Se estiver executando localmente (XAMPP)
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return BASE_URL;
+            }
+            // Se estiver no servidor interno (192.168.20.19)
+            else if (hostname === '192.168.20.19') {
+                return origin + '/usuario03/MoveBem';
+            }
+            // Se estiver no servidor externo (200.19.1.19)
+            else if (hostname === '200.19.1.19') {
+                return origin + '/usuario03/MoveBem';
+            }
+            // Fallback - usa a origem atual
+            else {
+                return origin + '/usuario03/MoveBem';
+            }
+        }
+
+        // Função para adicionar cache buster
+        function adicionarCacheBuster(url) {
+            const separator = url.includes('?') ? '&' : '?';
+            return url + separator + '_t=' + Date.now();
+        }
+
+        // Atualiza status
+        function atualizarStatus(mensagem, tipo = 'info') {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.textContent = mensagem;
+            statusBar.className = `status-bar ${tipo}`;
+        }
+
+        // Função para fazer requisições
+        async function fazerRequisicao(url, dados = null) {
+            try {
+                // Adicionar cache buster para evitar problemas de cache
+                url = adicionarCacheBuster(url);
+                
+                const config = {
+                    method: dados ? 'POST' : 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                };
+
+                if (dados) {
+                    config.body = new URLSearchParams(dados);
+                }
+
+                atualizarStatus(`Fazendo requisição: ${url}`, 'info');
+                
+                const response = await fetch(url, config);
+                const text = await response.text();
+                
+                try {
+                    const json = JSON.parse(text);
+                    atualizarStatus(`Resposta recebida com sucesso`, 'success');
+                    return json;
+                } catch {
+                    atualizarStatus(`Resposta não é JSON válido`, 'warning');
+                    return { erro: "Resposta não é JSON válido", resposta: text };
+                }
+            } catch (error) {
+                atualizarStatus(`Erro na requisição: ${error.message}`, 'error');
+                return { erro: error.message };
+            }
+        }
+
+        // Teste 1: Status da API
+        async function testarStatus() {
+            const apiUrl = getAPIUrl();
+            const resultado = await fazerRequisicao(`${apiUrl}/`);
+            document.getElementById('status-result').textContent = JSON.stringify(resultado, null, 2);
+        }
+
+        // Diagnóstico de conectividade
+        async function diagnosticarConectividade() {
+            const statusDiv = document.getElementById('status-result');
+            statusDiv.textContent = 'Executando diagnóstico...\n\n';
+
+            const hostname = window.location.hostname;
+            const origin = window.location.origin;
+            
+            const urlsParaTestar = [
+                origin + '/',
+                origin + '/MoveBem/',
+                origin + '/movebem/',
+                origin + '/usuario03/MoveBem/',
+                origin + '/api/',
+                window.location.origin + window.location.pathname.replace('/teste_servidor.html', '/')
+            ];
+
+            let resultados = 'DIAGNÓSTICO DE CONECTIVIDADE\n';
+            resultados += '=====================================\n\n';
+
+            for (let url of urlsParaTestar) {
+                try {
+                    atualizarStatus(`Testando: ${url}`, 'info');
+                    const response = await fetch(url, { 
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                    
+                    if (response.ok) {
+                        resultados += `${url} - OK (${response.status})\n`;
+                    } else {
+                        resultados += `${url} - ERRO ${response.status}\n`;
+                    }
+                } catch (error) {
+                    resultados += `${url} - FALHA: ${error.message}\n`;
+                }
+            }
+
+            resultados += '\nPOSSÍVEIS SOLUÇÕES:\n';
+            resultados += '1. Verificar se os arquivos foram enviados para o servidor\n';
+            resultados += '2. Confirmar o caminho correto no servidor\n';
+            resultados += '3. Verificar permissões de pasta no servidor\n';
+            resultados += '4. Testar localmente primeiro\n';
+
+            statusDiv.textContent = resultados;
+            atualizarStatus('Diagnóstico concluído', 'warning');
+        }
+
+        // Teste 2: Conexão com banco
+        async function testarConexao() {
+            const apiUrl = getAPIUrl();
+            const dados = { oper: 'Listar' };
+            const resultado = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, dados);
+            
+            if (resultado.NumMens === 1) {
+                document.getElementById('conexao-result').textContent = " CONEXÃO OK - Banco PostgreSQL funcionando!\n\n" + JSON.stringify(resultado, null, 2);
+            } else {
+                document.getElementById('conexao-result').textContent = " ERRO DE CONEXÃO:\n\n" + JSON.stringify(resultado, null, 2);
+            }
+        }
+
+        // Teste 3: Listar usuários
+        async function listarUsuarios() {
+            const apiUrl = getAPIUrl();
+            const dados = { oper: 'Listar' };
+            const resultado = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, dados);
+            document.getElementById('listar-result').textContent = JSON.stringify(resultado, null, 2);
+        }
+
+        // Teste 4: Cadastrar usuário
+        async function cadastrarUsuario() {
+            const apiUrl = getAPIUrl();
+            const dados = {
+                oper: 'Inserir',
+                nm_usuario: document.getElementById('nome-cadastro').value,
+                ds_email: document.getElementById('email-cadastro').value,
+                ds_senha: document.getElementById('senha-cadastro').value
+            };
+
+            const resultado = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, dados);
+            document.getElementById('cadastro-result').textContent = JSON.stringify(resultado, null, 2);
+        }
+
+        // Teste 5: Login
+        async function fazerLogin() {
+            const apiUrl = getAPIUrl();
+            const dados = {
+                oper: 'Login',
+                ds_email: document.getElementById('email-login').value,
+                ds_senha: document.getElementById('senha-login').value
+            };
+
+            const resultado = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, dados);
+            document.getElementById('login-result').textContent = JSON.stringify(resultado, null, 2);
+        }
+
+        // Teste 6: Completo
+        async function testeCompleto() {
+            const apiUrl = getAPIUrl();
+            const btn = document.getElementById('btn-completo');
+            btn.disabled = true;
+            btn.textContent = 'Executando...';
+            
+            let relatorio = "=== RELATÓRIO DE TESTES ===\n\n";
+            
+            // Teste 1: Status
+            relatorio += "1. STATUS DA API:\n";
+            const status = await fazerRequisicao(`${apiUrl}/`);
+            relatorio += status.nome ? "OK\n" : "ERRO\n";
+            relatorio += JSON.stringify(status, null, 2) + "\n\n";
+            
+            // Teste 2: Listar
+            relatorio += "2. CONEXÃO COM BANCO:\n";
+            const lista = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, { oper: 'Listar' });
+            relatorio += lista.NumMens === 1 ? "OK\n" : "ERRO\n";
+            relatorio += `Usuários encontrados: ${lista.registros || 0}\n\n`;
+            
+            // Teste 3: Cadastro
+            relatorio += "3. CADASTRO DE USUÁRIO:\n";
+            const cadastro = await fazerRequisicao(`${apiUrl}/Controller/CrudUsuario.php`, {
+                oper: 'Inserir',
+                nm_usuario: 'Teste Auto',
+                ds_email: `teste.auto.${Date.now()}@email.com`,
+                ds_senha: '123456'
+            });
+            relatorio += cadastro.NumMens === 1 ? "OK\n" : "ERRO\n";
+            relatorio += cadastro.Mensagem + "\n\n";
+            
+            relatorio += "=== FIM DO RELATÓRIO ===";
+            
+            document.getElementById('completo-result').textContent = relatorio;
+            
+            btn.disabled = false;
+            btn.textContent = 'Executar Teste Completo';
+            
+            atualizarStatus('Teste completo finalizado!', 'success');
+        }
+
+        // Inicialização
+        window.onload = function() {
+            const hostname = window.location.hostname;
+            const apiUrl = getAPIUrl();
+            
+            let ambiente = '';
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                ambiente = '💻 LOCALHOST (XAMPP)';
+            } else if (hostname === '192.168.20.19') {
+                ambiente = '🏢 SERVIDOR INTERNO';
+            } else if (hostname === '200.19.1.19') {
+                ambiente = '🌐 SERVIDOR EXTERNO';
+            } else {
+                ambiente = '❓ AMBIENTE DESCONHECIDO';
+            }
+            
+            atualizarStatus(`✅ ${ambiente} - API: ${apiUrl}`, 'success');
+        };
+
+        // Função para limpar cache do browser
+        function limparCache() {
+            try {
+                // Limpa localStorage
+                localStorage.clear();
+                
+                // Limpa sessionStorage
+                sessionStorage.clear();
+                
+                // Tenta limpar cache do service worker se houver
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                
+                atualizarStatus('🧹 Cache limpo com sucesso!', 'success');
+                
+                // Força reload em 2 segundos
+                setTimeout(() => {
+                    atualizarStatus('🔄 Recarregando página...', 'info');
+                    window.location.reload(true);
+                }, 2000);
+                
+            } catch (error) {
+                atualizarStatus(`❌ Erro ao limpar cache: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para forçar reload completo
+        function forcarReload() {
+            atualizarStatus('🔄 Forçando reload completo...', 'info');
+            
+            // Força reload ignorando cache
+            if (window.location.reload) {
+                window.location.reload(true);
+            } else {
+                // Fallback para browsers mais antigos
+                window.location.href = window.location.href + '?_r=' + Math.random();
+            }
+        }
+    </script>
+</body>
+</html>
