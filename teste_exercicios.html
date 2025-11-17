@@ -299,8 +299,8 @@
                         </div>
 
                         <div class="form-group" id="duracaoGroup" style="display:none;">
-                            <label>Duração (minutos):</label>
-                            <input type="number" id="duracao" placeholder="Ex: 30" min="1">
+                            <label>Duração (segundos):</label>
+                            <input type="number" id="duracao" placeholder="Ex: 30 (segundos)" min="1">
                         </div>
 
                         <button class="btn" onclick="executarExercicio()">
@@ -562,13 +562,13 @@
                 if (tipo === 'exercicio') {
                     data.dados.forEach((item) => {
                         html += `<div style="padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 5px;">`;
-                        html += `<strong>${item.nm_exercicio}</strong> <span style="color: #666;">(${item.vl_duracao || 0}min)</span>`;
+                        html += `<strong>${item.nm_exercicio}</strong> <span style="color: #666;">(${item.vl_duracao || 0}s)</span>`;
                         html += `</div>`;
                     });
                 } else if (tipo === 'rotina-exercicio') {
                     data.dados.forEach((item) => {
                         html += `<div style="padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 5px;">`;
-                        html += `<strong>${item.nm_exercicio}</strong> - <em>${item.nm_rotina || 'Rotina'}</em> <span style="color: #666;">(${item.vl_duracao || 0}min)</span>`;
+                        html += `<strong>${item.nm_exercicio}</strong> - <em>${item.nm_rotina || 'Rotina'}</em> <span style="color: #666;">(${item.vl_duracao || 0}s)</span>`;
                         html += `</div>`;
                     });
                 }
@@ -597,7 +597,7 @@
                 
                 if (data.dados && data.dados.length > 0) {
                     data.dados.forEach(exercicio => {
-                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}min)</option>`;
+                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}s)</option>`;
                     });
                 } else {
                     select.innerHTML = '<option value="">Nenhum exercício encontrado</option>';
@@ -623,7 +623,7 @@
                 
                 if (data.dados && data.dados.length > 0) {
                     data.dados.forEach(exercicio => {
-                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}min)</option>`;
+                        select.innerHTML += `<option value="${exercicio.id_exercicio}">${exercicio.nm_exercicio} (${exercicio.vl_duracao || 0}s)</option>`;
                     });
                 } else {
                     select.innerHTML = '<option value="">Nenhum exercício encontrado</option>';
@@ -708,7 +708,7 @@
                                 rotina.exercicios.forEach(exercicio => {
                                     html += `
                                         <div style="margin-left: 20px; padding: 5px 0; color: #666;">
-                                            - ${exercicio.nm_exercicio} <span style="color: #999;">(${exercicio.vl_duracao}min)</span>
+                                            - ${exercicio.nm_exercicio} <span style="color: #999;">(${exercicio.vl_duracao}s)</span>
                                         </div>
                                     `;
                                 });

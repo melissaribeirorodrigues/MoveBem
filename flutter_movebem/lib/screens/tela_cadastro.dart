@@ -3,17 +3,20 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
-class TelaLogin extends StatefulWidget {
-  const TelaLogin({super.key});
+class TelaCadastro extends StatefulWidget {
+  const TelaCadastro({super.key});
 
   @override
-  State<TelaLogin> createState() => _TelaLoginState();
+  State<TelaCadastro> createState() => _TelaCadastroState();
 }
 
-class _TelaLoginState extends State<TelaLogin> {
+class _TelaCadastroState extends State<TelaCadastro> {
+  final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
+  final _confirmarSenhaController = TextEditingController();
   bool _senhaVisivel = false;
+  bool _confirmarSenhaVisivel = false;
   bool _carregando = false;
 
   final Color pink1 = const Color(0xFFFF4D8A);
@@ -25,18 +28,33 @@ class _TelaLoginState extends State<TelaLogin> {
   // Libera recursos quando o widget é destruído
   @override
   void dispose() {
+    _nomeController.dispose();
     _emailController.dispose();
     _senhaController.dispose();
+    _confirmarSenhaController.dispose();
     super.dispose();
   }
 
-  // Função que faz login chamando o backend PHP
-  Future<void> _entrar() async {
+  // Função que faz cadastro chamando o backend PHP
+  Future<void> _cadastrar() async {
+    String nome = _nomeController.text.trim();
     String email = _emailController.text.trim();
     String senha = _senhaController.text;
+    String confirmarSenha = _confirmarSenhaController.text;
 
-    if (email.isEmpty || senha.isEmpty) {
+    // Validações
+    if (nome.isEmpty || email.isEmpty || senha.isEmpty || confirmarSenha.isEmpty) {
       _mostrarMensagem('Por favor, preencha todos os campos', erro: true);
+      return;
+    }
+
+    if (senha != confirmarSenha) {
+      _mostrarMensagem('As senhas não coincidem', erro: true);
+      return;
+    }
+
+    if (senha.length < 6) {
+      _mostrarMensagem('A senha deve ter no mínimo 6 caracteres', erro: true);
       return;
     }
 
@@ -45,17 +63,21 @@ class _TelaLoginState extends State<TelaLogin> {
     });
 
     try {
-
+ 
   final hashedSenha = md5.convert(utf8.encode(senha)).toString();
-      // Faz a requisição POST para o backend PHP
+  print('Enviando senha (hash MD5): $hashedSenha');
       final response = await http.post(
         Uri.parse('$baseUrl/Controller/CrudUsuario.php'),
         body: {
-          'oper': 'Login',
+          'oper': 'Inserir',
+          'nome': nome,
           'email': email,
           'senha': hashedSenha,
         },
       );
+
+
+  print('Resposta servidor (cadastro): ${response.statusCode} ${response.body}');
 
       setState(() {
         _carregando = false;
@@ -64,21 +86,18 @@ class _TelaLoginState extends State<TelaLogin> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        // Verifica se o login foi bem-sucedido
+        // Verifica se o cadastro foi bem-sucedido
         if (data['NumMens'] == 1) {
-          // Login bem-sucedido
-          _mostrarMensagem('Login realizado com sucesso!');
+          // Cadastro bem-sucedido
+          _mostrarMensagem('Cadastro realizado com sucesso!');
           
-          // Navega para a tela de rotinas (home)
-          Navigator.pushReplacementNamed(
-            context,
-            '/rotinas',
-            arguments: data['dados'], // Passa os dados do usuário
-          );
+          // Aguarda 1 segundo e volta para a tela de login
+          await Future.delayed(const Duration(seconds: 1));
+          Navigator.pop(context); // Volta para tela de login
         } else {
-          // Login falhou
+          // Cadastro falhou
           _mostrarMensagem(
-            data['Mensagem'] ?? 'E-mail ou senha incorretos',
+            data['Mensagem'] ?? 'Erro ao realizar cadastro',
             erro: true,
           );
         }
@@ -106,7 +125,7 @@ class _TelaLoginState extends State<TelaLogin> {
     );
   }
 
-  // Constrói a interface da tela de login
+  // Constrói a interface da tela de cadastro
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -144,7 +163,7 @@ class _TelaLoginState extends State<TelaLogin> {
 
               // Título
               Text(
-                'Faça Seu Login Agora',
+                'Faça Seu Cadastro Agora',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -153,6 +172,38 @@ class _TelaLoginState extends State<TelaLogin> {
               ),
 
               const SizedBox(height: 30),
+
+              // Campo de Nome
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: pink1, width: 1.5),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TextField(
+                    controller: _nomeController,
+                    keyboardType: TextInputType.name,
+                    textInputAction: TextInputAction.next,
+                    enableInteractiveSelection: true,
+                    decoration: InputDecoration(
+                      hintText: 'Digite seu nome',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(Icons.person_outline, color: pink1),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
 
               // Campo de E-mail
               Padding(
@@ -167,7 +218,6 @@ class _TelaLoginState extends State<TelaLogin> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     enableInteractiveSelection: true,
-                    autofocus: false,
                     decoration: InputDecoration(
                       hintText: 'Digite seu e-mail',
                       hintStyle: TextStyle(
@@ -198,9 +248,8 @@ class _TelaLoginState extends State<TelaLogin> {
                   child: TextField(
                     controller: _senhaController,
                     obscureText: !_senhaVisivel,
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.next,
                     enableInteractiveSelection: true,
-                    onSubmitted: (_) => _entrar(),
                     decoration: InputDecoration(
                       hintText: 'Digite sua senha',
                       hintStyle: TextStyle(
@@ -231,32 +280,62 @@ class _TelaLoginState extends State<TelaLogin> {
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
 
-              // Esqueceu sua senha?
-              TextButton(
-                onPressed: () {
-                  // TODO: Navegar para tela de recuperação de senha
-                },
-                child: const Text(
-                  'Esqueceu sua senha?',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
+              // Campo de Confirmar Senha
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: pink1, width: 1.5),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TextField(
+                    controller: _confirmarSenhaController,
+                    obscureText: !_confirmarSenhaVisivel,
+                    textInputAction: TextInputAction.done,
+                    enableInteractiveSelection: true,
+                    onSubmitted: (_) => _cadastrar(),
+                    decoration: InputDecoration(
+                      hintText: 'Confirme sua senha',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(Icons.lock_outline, color: pink1),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _confirmarSenhaVisivel
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: pink1,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _confirmarSenhaVisivel = !_confirmarSenhaVisivel;
+                          });
+                        },
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 30),
 
-              // Botão Entrar
+              // Botão Cadastrar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _carregando ? null : _entrar,
+                    onPressed: _carregando ? null : _cadastrar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: pink1,
                       shape: RoundedRectangleBorder(
@@ -274,7 +353,7 @@ class _TelaLoginState extends State<TelaLogin> {
                             ),
                           )
                         : const Text(
-                            'Entrar',
+                            'Cadastrar',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -287,12 +366,12 @@ class _TelaLoginState extends State<TelaLogin> {
 
               const SizedBox(height: 20),
 
-              // Não possui login? Cadastre-se
+              // Já possui login? Entrar
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Não possui login? ',
+                    'Já possui login? ',
                     style: TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
@@ -300,10 +379,10 @@ class _TelaLoginState extends State<TelaLogin> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, '/cadastro');
+                      Navigator.pop(context); // Volta para tela de login
                     },
                     child: Text(
-                      'Cadastre-se',
+                      'Entrar',
                       style: TextStyle(
                         color: pink1,
                         fontSize: 14,

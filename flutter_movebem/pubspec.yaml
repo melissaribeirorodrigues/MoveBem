@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.1.0
+  crypto: ^3.0.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -19,6 +20,16 @@ flutter:
   assets:
     - assets/logo.png
     - assets/icon.png
+    - assets/rotina1.png
+    - assets/rotina2.png
+    - assets/rotina3.png
+    - assets/agua.png
+    - assets/AM_1.png
+    - assets/AM_2.png
+    - assets/AM_3.png
+    - assets/AM_4.png
+    - assets/AM_5.png
+    - assets/AM_6.png
 
 flutter_launcher_icons:
   android: true

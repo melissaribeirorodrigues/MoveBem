@@ -66,12 +66,15 @@ class Tb_Usuario extends Base
             // Verifica se o email já existe
             $this->verificaEmailExistente();
             
+            // Criptografa a senha antes de salvar no banco (SEGURANÇA!)
+            $senhaCriptografada = password_hash($this->ds_senha, PASSWORD_DEFAULT);
+            
             $stmt = $this->conexao->prepare("INSERT INTO TB_USUARIO(ds_email, nm_usuario, ds_senha) VALUES " .
                                             "(:DsEmail, :NmUsuario, :DsSenha)");
            
             $stmt->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
             $stmt->bindValue(':NmUsuario', $this->nm_usuario, PDO::PARAM_STR);
-            $stmt->bindValue(':DsSenha', $this->ds_senha, PDO::PARAM_STR);
+            $stmt->bindValue(':DsSenha', $senhaCriptografada, PDO::PARAM_STR);
            
             $this->conexao->beginTransaction();
             $stmt->execute();
@@ -89,11 +92,15 @@ class Tb_Usuario extends Base
         try 
         {
             $this->buscaUsuario();
+            
+            // Criptografa a senha antes de atualizar (SEGURANÇA!)
+            $senhaCriptografada = password_hash($this->ds_senha, PASSWORD_DEFAULT);
+            
             $stmt = $this->conexao->prepare("UPDATE TB_Usuario SET ds_email = :DsEmail, nm_usuario = :NmUsuario, ds_senha = :DsSenha WHERE id_usuario = :IdUsuario");
             $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
             $stmt->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
             $stmt->bindValue(':NmUsuario', $this->nm_usuario, PDO::PARAM_STR);
-            $stmt->bindValue(':DsSenha', $this->ds_senha, PDO::PARAM_STR);
+            $stmt->bindValue(':DsSenha', $senhaCriptografada, PDO::PARAM_STR);
             $this->conexao->beginTransaction();
             $stmt->execute();
             $this->conexao->commit();
@@ -167,10 +174,10 @@ class Tb_Usuario extends Base
     {
         try
         {
-            $sql = "SELECT id_usuario, ds_email, nm_usuario FROM TB_USUARIO WHERE ds_email = :DsEmail AND ds_senha = :DsSenha";
+            // Busca usuário pelo email
+            $sql = "SELECT id_usuario, ds_email, nm_usuario, ds_senha FROM TB_USUARIO WHERE ds_email = :DsEmail";
             $stmt = $this->conexao->prepare($sql);
             $stmt->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
-            $stmt->bindValue(':DsSenha', $this->ds_senha, PDO::PARAM_STR);
             $stmt->execute();
             
             $ret = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -181,8 +188,19 @@ class Tb_Usuario extends Base
             }
             else
             {
-                $this->banco->setMensagem(1, "Login realizado com sucesso");
-                $this->banco->setDados(1, $ret);
+                // Verifica se a senha digitada corresponde ao hash no banco (SEGURANÇA!)
+                if (password_verify($this->ds_senha, $ret['ds_senha'])) 
+                {
+                    // Remove a senha do retorno (não envia pro app)
+                    unset($ret['ds_senha']);
+                    
+                    $this->banco->setMensagem(1, "Login realizado com sucesso");
+                    $this->banco->setDados(1, $ret);
+                }
+                else
+                {
+                    $this->banco->setMensagem(0, "Email ou senha incorretos");
+                }
             }
         } 
         catch (Exception $e) 

@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'screens/tela_login.dart';
+import 'screens/tela_cadastro.dart';
+import 'screens/tela_rotinas.dart';
+import 'screens/tela_exercicio_rotina.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,7 +25,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const TelaLogin(),
-        '/home': (context) => const TelaHome(),
+        '/cadastro': (context) => const TelaCadastro(),
+        '/rotinas': (context) => const TelaRotinas(),
+        '/exercicio_rotina': (context) => const TelaExercicioRotina(),
       },
     );
   }
@@ -83,12 +88,15 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final double logoSize = MediaQuery.of(context).size.width * 0.80;
+    final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
+        child: SizedBox(
+          height: screenHeight,
+          child: Column(
+            children: [
             const SizedBox(height: 40),
             // Logo centralizado
             Center(
@@ -155,76 +163,6 @@ class _SplashScreenState extends State<SplashScreen>
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Tela Home de exemplo
-class TelaHome extends StatelessWidget {
-  const TelaHome({super.key});
-
-  // Constrói a interface da tela principal (home)
-  @override
-  Widget build(BuildContext context) {
-    // Recebe os dados do usuário passados pela navegação
-    final dadosUsuario = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final nomeUsuario = dadosUsuario?['nm_usuario'] ?? dadosUsuario?['nome'] ?? 'Usuário';
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MoveBem - Home'),
-        backgroundColor: const Color(0xFFFF4D8A),
-        actions: [
-          // Botão de logout no AppBar
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () {
-              // Volta para a tela de login
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.check_circle,
-              color: Color(0xFFFF4D8A),
-              size: 80,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Bem-vindo, $nomeUsuario!',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Carregamento concluído com sucesso',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                // Logout - volta para a tela de login
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4D8A),
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              ),
-              child: const Text(
-                'Sair',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ),
-          ],
         ),
       ),
     );
