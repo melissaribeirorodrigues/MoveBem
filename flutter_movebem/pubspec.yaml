@@ -2,6 +2,7 @@ name: MoveBem
 description: A minimal Flutter app with a MoveBem splash/loading screen.
 publish_to: 'none'
 version: 0.0.1
+
 environment:
   sdk: ">=2.18.0 <4.0.0"
   flutter: ">=3.0.0"
@@ -11,6 +12,8 @@ dependencies:
     sdk: flutter
   http: ^1.1.0
   crypto: ^3.0.1
+  shared_preferences: ^2.2.2
+  table_calendar: ^3.0.9   # ✅ ADICIONADO
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

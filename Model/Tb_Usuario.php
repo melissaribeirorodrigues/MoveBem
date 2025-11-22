@@ -114,23 +114,57 @@ class Tb_Usuario extends Base
  
     public function Excluir()
     {
+        $debugInfo = [];
+        
         try 
         {
+            $debugInfo[] = "Iniciando exclusão - ID: " . $this->id_usuario;
             $this->buscaUsuario();
-            $stmt = $this->conexao->prepare(
-                'Delete From TB_Usuario ' .
-                    'WHERE id_usuario = :IdUsuario'
-            );
-
-            $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            
             $this->conexao->beginTransaction();
+            $debugInfo[] = "Transação iniciada";
+            
+            try {
+                $this->conexao->exec('SET CONSTRAINTS ALL DEFERRED');
+                $debugInfo[] = "Constraints DEFERRED";
+            } catch (Exception $e) {
+                $debugInfo[] = "Constraints não DEFERRABLE";
+            }
+            
+            // 1. Excluir histórico diário do usuário
+            $stmtHistorico = $this->conexao->prepare('DELETE FROM tb_historico_diario WHERE id_usuario = :IdUsuario');
+            $stmtHistorico->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            $stmtHistorico->execute();
+            $debugInfo[] = "Histórico deletado: " . $stmtHistorico->rowCount();
+            
+            // 2. Excluir registros de água do usuário
+            $stmtAgua = $this->conexao->prepare('DELETE FROM tb_registro_agua WHERE id_usuario = :IdUsuario');
+            $stmtAgua->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            $stmtAgua->execute();
+            $debugInfo[] = "Água deletada: " . $stmtAgua->rowCount();
+            
+            // 3. Excluir o usuário
+            $debugInfo[] = "Tentando deletar usuário...";
+            $stmt = $this->conexao->prepare('DELETE FROM TB_Usuario WHERE id_usuario = :IdUsuario');
+            $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
             $stmt->execute();
+            $debugInfo[] = "Usuário deletado com sucesso!";
+            
             $this->conexao->commit();
             $this->banco->setMensagem(1, "Usuario Excluido com Sucesso");
         } 
         catch (Exception $e) 
         {
-            throw new Exception($e->getMessage());
+            $debugInfo[] = "ERRO: " . $e->getMessage();
+            $debugInfo[] = "Code: " . $e->getCode();
+            $debugInfo[] = "File: " . basename($e->getFile()) . ":" . $e->getLine();
+            
+            if ($this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            
+            $debugMessage = implode(" | ", $debugInfo);
+            $this->banco->setMensagem(0, $debugMessage);
         }
     }
 
@@ -188,7 +222,7 @@ class Tb_Usuario extends Base
             }
             else
             {
-                // Verifica se a senha digitada corresponde ao hash no banco (SEGURANÇA!)
+                // Verifica a senha com bcrypt
                 if (password_verify($this->ds_senha, $ret['ds_senha'])) 
                 {
                     // Remove a senha do retorno (não envia pro app)

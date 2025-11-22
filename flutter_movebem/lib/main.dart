@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'screens/tela_treino_acontecendo.dart';
 import 'screens/tela_login.dart';
 import 'screens/tela_cadastro.dart';
 import 'screens/tela_rotinas.dart';
 import 'screens/tela_exercicio_rotina.dart';
+import 'screens/tela_agua.dart';
+import 'screens/tela_descricao_exercicio.dart';
+import 'screens/tela_perfil.dart';
+import 'screens/tela_historico.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +33,11 @@ class MyApp extends StatelessWidget {
         '/cadastro': (context) => const TelaCadastro(),
         '/rotinas': (context) => const TelaRotinas(),
         '/exercicio_rotina': (context) => const TelaExercicioRotina(),
+        '/agua': (context) => const TelaAgua(),
+        '/perfil': (context) => const TelaPerfil(),
+        '/treino_acontecendo': (context) => const TelaTreinoAcontecendo(),
+        '/descricao_exercicio': (context) => const TelaDescricaoExercicio(),
+        '/historico': (context) => const TelaHistorico(),
       },
     );
   }
@@ -46,8 +56,8 @@ class _SplashScreenState extends State<SplashScreen>
   Timer? _timer;
   bool _navegou = false; // Flag para evitar múltiplas navegações
 
-  final Color pink1 = const Color(0xFFFF4D8A); 
-  final Color pink2 = const Color(0xFFFFA7C4); 
+  final Color pink1 = const Color(0xFFFF4D8A);
+  final Color pink2 = const Color(0xFFFFA7C4);
 
   // Inicia o progresso quando o widget é criado
   @override
@@ -64,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
         if (_progress >= 1.0) {
           _progress = 1.0;
           _timer?.cancel();
-          
+
           // Navega apenas uma vez
           if (!_navegou) {
             _navegou = true;
@@ -88,15 +98,12 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final double logoSize = MediaQuery.of(context).size.width * 0.80;
-    final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SizedBox(
-          height: screenHeight,
-          child: Column(
-            children: [
+        child: Column(
+          children: [
             const SizedBox(height: 40),
             // Logo centralizado
             Center(
@@ -162,7 +169,6 @@ class _SplashScreenState extends State<SplashScreen>
 
             const SizedBox(height: 40),
           ],
-        ),
         ),
       ),
     );

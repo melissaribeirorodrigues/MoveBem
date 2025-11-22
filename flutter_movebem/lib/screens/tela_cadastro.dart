@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
 
 class TelaCadastro extends StatefulWidget {
   const TelaCadastro({super.key});
@@ -63,16 +62,15 @@ class _TelaCadastroState extends State<TelaCadastro> {
     });
 
     try {
- 
-  final hashedSenha = md5.convert(utf8.encode(senha)).toString();
-  print('Enviando senha (hash MD5): $hashedSenha');
+      // Envia senha em texto simples - o backend faz o hash com password_hash()
+      print('Enviando senha em texto simples');
       final response = await http.post(
         Uri.parse('$baseUrl/Controller/CrudUsuario.php'),
         body: {
           'oper': 'Inserir',
           'nome': nome,
           'email': email,
-          'senha': hashedSenha,
+          'senha': senha, // Senha em texto simples
         },
       );
 

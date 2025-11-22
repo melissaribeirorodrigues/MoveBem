@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TelaRotinas extends StatefulWidget {
   const TelaRotinas({super.key});
@@ -14,11 +15,26 @@ class _TelaRotinasState extends State<TelaRotinas> {
   bool _loading = false;
   List<Map<String, dynamic>> _rotinas = [];
   int _currentIndex = 0;
+  Map<String, dynamic>? dadosUsuario;
 
   @override
   void initState() {
     super.initState();
+    _carregarDadosUsuario();
     _loadRotinas();
+  }
+
+  Future<void> _carregarDadosUsuario() async {
+    final prefs = await SharedPreferences.getInstance();
+    final usuarioJson = prefs.getString('usuario');
+    
+    if (usuarioJson != null) {
+      setState(() {
+        dadosUsuario = json.decode(usuarioJson);
+      });
+    } else {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   Future<void> _loadRotinas() async {
@@ -169,11 +185,17 @@ class _TelaRotinasState extends State<TelaRotinas> {
   }
 
   Widget _buildWaterCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
+    return GestureDetector(
+      onTap: () {
+        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        final idUsuario = args?['id_usuario']?.toString() ?? args?['idUsuario']?.toString() ?? '1';
+        Navigator.pushNamed(context, '/agua', arguments: {'id_usuario': idUsuario});
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
           // Quadrado de fundo (mais claro e maior)
           Positioned(
             top: 8,
@@ -253,13 +275,13 @@ class _TelaRotinasState extends State<TelaRotinas> {
           ),
         ],
       ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final nomeUsuario = args?['nm_usuario'] ?? args?['nome'] ?? args?['nmUsuario'] ?? 'Usuário';
+    final nomeUsuario = dadosUsuario?['nm_usuario'] ?? 'Usuário';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -357,7 +379,9 @@ class _TelaRotinasState extends State<TelaRotinas> {
                   setState(() {
                     _currentIndex = 1;
                   });
-                  Navigator.pushNamed(context, '/registro_agua');
+                  final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                  final idUsuario = args?['id_usuario']?.toString() ?? args?['idUsuario']?.toString() ?? '1';
+                  Navigator.pushReplacementNamed(context, '/agua', arguments: {'id_usuario': idUsuario});
                 },
               ),
               IconButton(
@@ -370,7 +394,11 @@ class _TelaRotinasState extends State<TelaRotinas> {
                   setState(() {
                     _currentIndex = 2;
                   });
-                  Navigator.pushNamed(context, '/perfil');
+                  Navigator.pushNamed(
+                    context,
+                    '/perfil',
+                    arguments: dadosUsuario,
+                  );
                 },
               ),
             ],

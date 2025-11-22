@@ -86,5 +86,55 @@ class Tb_Registro_Agua extends Base
             $this->banco->setMensagem(0, $e->getMessage());
         }
     }
+
+    public function TotalDia()
+    {
+        try 
+        {
+            $this->verificaUsuarioExiste();
+            
+            $stmt = $this->conexao->prepare("SELECT COALESCE(SUM(qt_agua_ml), 0) as total 
+                                            FROM TB_REGISTRO_AGUA 
+                                            WHERE id_usuario = :IdUsuario 
+                                            AND DATE(dh_ingestao_agua) = CURRENT_DATE");
+            
+            $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $this->banco->setMensagem(1, "Total do dia recuperado com sucesso");
+            $this->banco->setDados(['total' => (int)$resultado['total']]);
+        } 
+        catch (Exception $e) 
+        {
+            $this->banco->setMensagem(0, $e->getMessage());
+        }
+    }
+
+    public function Listar()
+    {
+        try 
+        {
+            $this->verificaUsuarioExiste();
+            
+            $stmt = $this->conexao->prepare("SELECT id_registro_agua, id_usuario, dh_ingestao_agua, qt_agua_ml 
+                                            FROM TB_REGISTRO_AGUA 
+                                            WHERE id_usuario = :IdUsuario 
+                                            ORDER BY dh_ingestao_agua DESC");
+            
+            $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $this->banco->setMensagem(1, "Sucesso na Pesquisa");
+            $this->banco->setDados($registros);
+        } 
+        catch (Exception $e) 
+        {
+            $this->banco->setMensagem(0, $e->getMessage());
+        }
+    }
 }
 ?>

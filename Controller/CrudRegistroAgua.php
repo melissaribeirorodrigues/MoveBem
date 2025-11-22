@@ -22,7 +22,13 @@
         switch ($Oper) {
             case 'Inserir':
                 $Tb_Registro_Agua->Inserir();
-                break;  
+                break;
+            case 'TotalDia':
+                $Tb_Registro_Agua->TotalDia();
+                break;
+            case 'Listar':
+                $Tb_Registro_Agua->Listar();
+                break;
             default:
                 $banco->setMensagem(1,'Operacao informada nao tratada');
                 break;

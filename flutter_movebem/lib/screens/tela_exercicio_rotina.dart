@@ -13,28 +13,31 @@ class _TelaExercicioRotinaState extends State<TelaExercicioRotina> {
   bool _loading = true;
   List<dynamic> _exercicios = [];
   String _nomeRotina = '';
+  int? _idRotina;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
     if (args != null) {
       _nomeRotina = args['nm_rotina'] ?? '';
-      final idRotina = args['id_rotina'];
-      if (idRotina != null) {
-        _loadExercicios(idRotina);
+      _idRotina = args['id_rotina'];
+
+      if (_idRotina != null) {
+        _loadExercicios(_idRotina!);
       }
     }
   }
 
   Future<void> _loadExercicios(int idRotina) async {
-    setState(() {
-      _loading = true;
-    });
+    setState(() => _loading = true);
 
     try {
-      final url = Uri.parse('http://200.19.1.19/usuario03/MoveBem/Controller/CrudRotinaExercicio.php');
-      print('Buscando exercícios para rotina ID: $idRotina');
+      final url = Uri.parse(
+          'http://200.19.1.19/usuario03/MoveBem/Controller/CrudRotinaExercicio.php');
+
       final response = await http.post(
         url,
         body: {
@@ -43,34 +46,27 @@ class _TelaExercicioRotinaState extends State<TelaExercicioRotina> {
         },
       );
 
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('Data decoded: $data');
-        if (data['NumMens'] == 1 && data['Mensagem'] == 'Sucesso na Pesquisa') {
+
+        if (data['NumMens'] == 1) {
           setState(() {
             _exercicios = data['dados'] ?? [];
-            print('Exercícios carregados: ${_exercicios.length}');
-            _loading = false;
-          });
-        } else {
-          print('Erro na resposta: ${data['Mensagem']}');
-          setState(() {
-            _exercicios = [];
             _loading = false;
           });
         }
       }
     } catch (e) {
-      print('Erro ao carregar exercícios: $e');
       setState(() {
         _exercicios = [];
         _loading = false;
       });
     }
   }
+
+  // -----------------------
+  //     TELA
+  // -----------------------
 
   @override
   Widget build(BuildContext context) {
@@ -86,10 +82,7 @@ class _TelaExercicioRotinaState extends State<TelaExercicioRotina> {
         title: Text(
           _nomeRotina,
           style: const TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+              color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       body: Column(
@@ -98,72 +91,55 @@ class _TelaExercicioRotinaState extends State<TelaExercicioRotina> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _exercicios.isEmpty
-                    ? const Center(child: Text('Nenhum exercício encontrado'))
+                    ? const Center(child: Text("Nenhum exercício encontrado"))
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _exercicios.length,
                         itemBuilder: (context, index) {
-                          final exercicio = _exercicios[index];
-                          return _buildExercicioCard(exercicio);
+                          return _buildExercicioCard(_exercicios[index]);
                         },
                       ),
           ),
-          // Botão "Iniciar Rotina"
+
+          // --------------------
+          //  BOTÃO INICIAR
+          // --------------------
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Ação para iniciar a rotina
+                  if (_idRotina == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Erro: Rotina sem ID!")),
+                    );
+                    return;
+                  }
+
+                  Navigator.pushNamed(
+                    context,
+                    '/treino_acontecendo',
+                    arguments: {
+                      "id_rotina": _idRotina,
+                      "lista_exercicios": _exercicios,
+                    },
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: Colors.black, width: 1),
+                    side: const BorderSide(color: Colors.black),
                   ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
-                  'INICIAR ROTINA MATINAL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  "INICIAR ROTINA MATINAL",
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-          ),
-          // Bottom Navigation Bar
-          Container(
-            margin: const EdgeInsets.all(16.0),
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF4D8A), Color(0xFFFF7BAC)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.home, color: Colors.white, size: 28),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.water_drop, color: Colors.white70, size: 28),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.person_outline, color: Colors.white70, size: 28),
-                  onPressed: () {},
-                ),
-              ],
             ),
           ),
         ],
@@ -171,98 +147,99 @@ class _TelaExercicioRotinaState extends State<TelaExercicioRotina> {
     );
   }
 
+  // -----------------------
+  //    CARD DO EXERCÍCIO
+  // -----------------------
+
+  String _getImagemExercicio(int? idExercicio) {
+    if (idExercicio == null) return 'assets/logo.png';
+    
+    final imagens = {
+      10: 'assets/AM_1.png',  // Inclinação lateral do pescoço
+      11: 'assets/AM_2.png',  // Rotação cervical
+      12: 'assets/AM_3.png',  // Tríceps + lateral do tronco
+      13: 'assets/AM_4.png',  // Peitoral na parede
+      14: 'assets/AM_5.png',  // Alongamento em pé tocando os pés
+      15: 'assets/AM_6.png',  // Extensão de coluna
+      16: 'assets/AM_1.png',  // Abraço de ombros
+      17: 'assets/AM_2.png',  // Alongamento de punho (palma para cima)
+      18: 'assets/AM_3.png',  // Alongamento de punho (palma para baixo)
+      19: 'assets/AM_4.png',  // Alongamento lateral em pé
+      20: 'assets/AM_5.png',  // Círculos com tornozelos
+      21: 'assets/AM_6.png',  // Flexão lombar sentado
+      22: 'assets/AM_1.png',  // Posterior da coxa sentado
+      23: 'assets/AM_2.png',  // Alongamento de pescoço para frente
+      24: 'assets/AM_3.png',  // Alongamento de peitoral deitado
+      25: 'assets/AM_4.png',  // Alongamento lateral suave deitado
+      26: 'assets/AM_5.png',  // Deitar e abraçar os joelhos
+      27: 'assets/AM_6.png',  // Respiração profunda com relaxamento
+    };
+    
+    return imagens[idExercicio] ?? 'assets/logo.png';
+  }
+
   Widget _buildExercicioCard(Map<String, dynamic> exercicio) {
-    final nomeExercicio = exercicio['nm_exercicio'] ?? 'Exercício';
-    final duracao = exercicio['vl_duracao'] ?? 0;
-    final idExercicio = exercicio['id_exercicio'];
-    
-    // Mapeia id_exercicio para a imagem correspondente
-    String imagePath = 'assets/exercicio_default.png';
-    String idString = idExercicio.toString();
-    
-    if (idString == '14') {
-      imagePath = 'assets/AM_1.png';
-    } else if (idString == '15') {
-      imagePath = 'assets/AM_2.png';
-    } else if (idString == '10') {
-      imagePath = 'assets/AM_3.png';
-    } else if (idString == '11') {
-      imagePath = 'assets/AM_5.png';
-    } else if (idString == '13') {
-      imagePath = 'assets/AM_4.png';
-    } else if (idString == '12') {
-      imagePath = 'assets/AM_6.png';
-    }
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Imagem do exercício
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE4F0),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.fitness_center,
-                    color: Color(0xFFFF4D8A),
-                    size: 28,
-                  );
-                },
+    final nome = exercicio['nm_exercicio'];
+    final duracao = exercicio['vl_duracao'];
+    final id = exercicio['id_exercicio'];
+
+    return InkWell(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/descricao_exercicio',
+          arguments: {
+            'id_exercicio': id,
+            'id_rotina': _idRotina,
+          },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE4F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  _getImagemExercicio(id),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.fitness_center,
+                        color: Color(0xFFFF4D8A), size: 32);
+                  },
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          // Informações do exercício
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  nomeExercicio,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                if (duracao > 0) ...[
-                  const SizedBox(height: 4),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(nome,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                   Text(
-                    '${duracao}s',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFFFF4D8A),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                    "${duracao}s",
+                    style: const TextStyle(color: Color(0xFFFF4D8A)),
+                  )
                 ],
-              ],
-            ),
-          ),
-        ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

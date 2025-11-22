@@ -1,4 +1,16 @@
 <?php
+
+// Headers CORS para permitir acesso do app Flutter
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json; charset=utf-8');
+
+// Responde a requisições OPTIONS (preflight)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
       
 require_once('..'.DIRECTORY_SEPARATOR.'Model'.DIRECTORY_SEPARATOR.'Tb_Usuario.php');
 require_once('..'.DIRECTORY_SEPARATOR.'Model'.DIRECTORY_SEPARATOR.'Banco.php');
@@ -9,6 +21,9 @@ $s_ds_email   = $_REQUEST['email'] ?? $_REQUEST['ds_email'] ?? "";
 $s_ds_senha   = $_REQUEST['senha'] ?? $_REQUEST['ds_senha'] ?? "";
 $i_id_usuario = $_REQUEST['id'] ?? $_REQUEST['id_usuario'] ?? "";
 $Oper         = $_REQUEST['oper'] ?? "";
+
+// Define como variável global para o getRetorno() funcionar
+$GLOBALS['Oper'] = $Oper;
 
 try {  
     $banco = new Banco();

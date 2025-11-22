@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -21,6 +21,42 @@ class _TelaLoginState extends State<TelaLogin> {
 
   // URL do backend
   final String baseUrl = 'http://200.19.1.19/usuario03/MoveBem';
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarSessao();
+  }
+
+  // Verifica se já existe uma sessão salva
+  Future<void> _verificarSessao() async {
+    final prefs = await SharedPreferences.getInstance();
+    final usuarioJson = prefs.getString('usuario');
+    
+    if (usuarioJson != null && usuarioJson.isNotEmpty) {
+      try {
+        final dadosUsuario = json.decode(usuarioJson);
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        if (mounted) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/rotinas',
+            arguments: dadosUsuario,
+          );
+        }
+      } catch (e) {
+        await prefs.remove('usuario');
+      }
+    }
+  }
+
+  // Salva os dados do usuário localmente
+  Future<void> _salvarSessao(Map<String, dynamic> dadosUsuario) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('usuario', json.encode(dadosUsuario));
+    await prefs.commit();
+  }
 
   // Libera recursos quando o widget é destruído
   @override
@@ -45,15 +81,21 @@ class _TelaLoginState extends State<TelaLogin> {
     });
 
     try {
-
-  final hashedSenha = md5.convert(utf8.encode(senha)).toString();
-      // Faz a requisição POST para o backend PHP
       final response = await http.post(
         Uri.parse('$baseUrl/Controller/CrudUsuario.php'),
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
         body: {
           'oper': 'Login',
           'email': email,
-          'senha': hashedSenha,
+          'senha': senha,
+        },
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Timeout ao conectar com o servidor');
         },
       );
 
@@ -64,19 +106,16 @@ class _TelaLoginState extends State<TelaLogin> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        // Verifica se o login foi bem-sucedido
         if (data['NumMens'] == 1) {
-          // Login bem-sucedido
+          await _salvarSessao(data['dados']);
           _mostrarMensagem('Login realizado com sucesso!');
-          
-          // Navega para a tela de rotinas (home)
+            
           Navigator.pushReplacementNamed(
             context,
             '/rotinas',
-            arguments: data['dados'], // Passa os dados do usuário
+            arguments: data['dados'],
           );
         } else {
-          // Login falhou
           _mostrarMensagem(
             data['Mensagem'] ?? 'E-mail ou senha incorretos',
             erro: true,
