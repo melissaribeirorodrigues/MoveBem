@@ -93,18 +93,36 @@ class Tb_Usuario extends Base
         {
             $this->buscaUsuario();
             
-            // Criptografa a senha antes de atualizar (SEGURANÇA!)
-            $senhaCriptografada = password_hash($this->ds_senha, PASSWORD_DEFAULT);
-            
-            $stmt = $this->conexao->prepare("UPDATE TB_Usuario SET ds_email = :DsEmail, nm_usuario = :NmUsuario, ds_senha = :DsSenha WHERE id_usuario = :IdUsuario");
+            $stmt = $this->conexao->prepare("UPDATE TB_Usuario SET ds_email = :DsEmail, nm_usuario = :NmUsuario WHERE id_usuario = :IdUsuario");
             $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
             $stmt->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
             $stmt->bindValue(':NmUsuario', $this->nm_usuario, PDO::PARAM_STR);
-            $stmt->bindValue(':DsSenha', $senhaCriptografada, PDO::PARAM_STR);
             $this->conexao->beginTransaction();
             $stmt->execute();
             $this->conexao->commit();
             $this->banco->setMensagem(1, "Dados do usuario Alterados");
+        } 
+        catch (Exception $e) 
+        {
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function AlterarSenha(){
+        try 
+        {
+            $this->buscaUsuario();
+            
+            // Criptografa a senha antes de atualizar (SEGURANÇA!)
+            $senhaCriptografada = password_hash($this->ds_senha, PASSWORD_DEFAULT);
+            
+            $stmt = $this->conexao->prepare("UPDATE TB_Usuario SET ds_senha = :DsSenha WHERE id_usuario = :IdUsuario");
+            $stmt->bindValue(':IdUsuario', $this->id_usuario, PDO::PARAM_INT);
+            $stmt->bindValue(':DsSenha', $senhaCriptografada, PDO::PARAM_STR);
+            $this->conexao->beginTransaction();
+            $stmt->execute();
+            $this->conexao->commit();
+            $this->banco->setMensagem(1, "Senha alterada com sucesso");
         } 
         catch (Exception $e) 
         {
@@ -257,6 +275,49 @@ class Tb_Usuario extends Base
         }
         
         return false;
+    }
+
+    public function RecuperarSenha()
+    {
+        try
+        {
+            // Busca usuário pelo email
+            $sql = "SELECT id_usuario FROM TB_USUARIO WHERE ds_email = :DsEmail";
+            $stmt = $this->conexao->prepare($sql);
+            $stmt->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $ret = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$ret) 
+            {
+                $this->banco->setMensagem(0, "Email nao encontrado");
+            }
+            else
+            {
+                // Criptografa a nova senha
+                $senhaCriptografada = password_hash($this->ds_senha, PASSWORD_DEFAULT);
+                
+                // Atualiza a senha no banco
+                $sqlUpdate = "UPDATE TB_USUARIO SET ds_senha = :DsSenha WHERE ds_email = :DsEmail";
+                $stmtUpdate = $this->conexao->prepare($sqlUpdate);
+                $stmtUpdate->bindValue(':DsSenha', $senhaCriptografada, PDO::PARAM_STR);
+                $stmtUpdate->bindValue(':DsEmail', $this->ds_email, PDO::PARAM_STR);
+                
+                $this->conexao->beginTransaction();
+                $stmtUpdate->execute();
+                $this->conexao->commit();
+                
+                $this->banco->setMensagem(1, "Senha alterada com sucesso");
+            }
+        } 
+        catch (Exception $e) 
+        {
+            if ($this->conexao->inTransaction()) {
+                $this->conexao->rollBack();
+            }
+            $this->banco->setMensagem(0, "Erro ao recuperar senha: " . $e->getMessage());
+        }
     }
 
 }

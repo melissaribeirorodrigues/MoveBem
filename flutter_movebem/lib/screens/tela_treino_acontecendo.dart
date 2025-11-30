@@ -270,12 +270,14 @@ class _TelaTreinoAcontecendoState extends State<TelaTreinoAcontecendo> {
     if (_saved) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final idUsuario = prefs.getInt('id_usuario');
+    final usuarioJson = prefs.getString('usuario');
+    
+    if (usuarioJson == null || _idRotina == null) return;
 
-    if (idUsuario == null || _idRotina == null) return;
-
-    // arredonda para cima
-    final minutos = (_totalSeconds / 60).ceil();
+    final dados = json.decode(usuarioJson);
+    final idUsuario = dados['id_usuario'];
+    
+    if (idUsuario == null) return;
 
     final uri = Uri.parse(backendHistoricoUrl);
 
@@ -283,7 +285,7 @@ class _TelaTreinoAcontecendoState extends State<TelaTreinoAcontecendo> {
       'oper': 'InserirHistorico',
       'id_usuario': idUsuario.toString(),
       'id_rotina': _idRotina.toString(),
-      'vl_total_minutos': minutos.toString(),
+      'vl_total_minutos': _totalSeconds.toString(),
     });
 
     _saved = true;

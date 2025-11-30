@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:table_calendar/table_calendar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TelaHistorico extends StatefulWidget {
   const TelaHistorico({Key? key}) : super(key: key);
@@ -21,19 +22,29 @@ class _TelaHistoricoState extends State<TelaHistorico> {
   int? _idUsuario;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+  void initState() {
+    super.initState();
+    _carregarDadosUsuario();
+  }
 
-    _idUsuario = args?['id_usuario'];
-
-    if (_idUsuario != null) {
+  Future<void> _carregarDadosUsuario() async {
+    final prefs = await SharedPreferences.getInstance();
+    final usuarioJson = prefs.getString('usuario');
+    
+    if (usuarioJson != null) {
+      final dados = json.decode(usuarioJson);
+      setState(() {
+        _idUsuario = dados['id_usuario'];
+      });
       _carregarDados(_selectedDay);
+    } else {
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
   Future<void> _carregarDados(DateTime data) async {
+    if (_idUsuario == null) return;
+    
     setState(() => _loading = true);
 
     try {
@@ -47,8 +58,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       );
 
       if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
         setState(() {
-          _dados = json.decode(resp.body);
+          _dados = data;
           _loading = false;
         });
       } else {
@@ -137,7 +149,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           Text(
-            "Você realizou ${totalMin} minutos",
+            "Você realizou ${totalMin} segundos",
             style: const TextStyle(color: Colors.black54),
           ),
           const SizedBox(height: 24),

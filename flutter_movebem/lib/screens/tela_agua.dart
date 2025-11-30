@@ -54,7 +54,6 @@ class _TelaAguaState extends State<TelaAgua> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('Response TotalDia: $data');
         if (data['NumMens'] == 1 && data['dados'] != null) {
           setState(() {
             _totalDia = data['dados']['total'] ?? 0;
@@ -62,7 +61,7 @@ class _TelaAguaState extends State<TelaAgua> {
         }
       }
     } catch (e) {
-      print('Erro ao carregar total do dia: $e');
+      // Erro ao carregar total - continua silenciosamente
     }
   }
 
@@ -83,9 +82,6 @@ class _TelaAguaState extends State<TelaAgua> {
           'qt_agua_ml': quantidade.toString(),
         },
       );
-
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -108,7 +104,7 @@ class _TelaAguaState extends State<TelaAgua> {
         }
       }
     } catch (e) {
-      print('Erro ao salvar quantidade: $e');
+      // Erro ao salvar - continua silenciosamente
     }
   }
 

@@ -62,9 +62,9 @@ class Tb_Historico_Diario extends Base
 
             $stmt = $this->conexao->prepare("
                 INSERT INTO TB_HISTORICO_DIARIO
-                    (id_usuario, id_rotina, dt_data, vl_total_minutos, id_exercicio)
+                    (id_usuario, id_rotina, dt_data, vl_total_minutos)
                 VALUES
-                    (:id_usuario, :id_rotina, CURRENT_DATE, :minutos, NULL)
+                    (:id_usuario, :id_rotina, CURRENT_DATE, :minutos)
             ");
 
             $stmt->bindValue(':id_usuario', $this->id_usuario, PDO::PARAM_INT);
@@ -92,6 +92,11 @@ class Tb_Historico_Diario extends Base
      */
     public function ResumoPorData() 
     {
+        // Limpa qualquer output anterior e buffer
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
         header('Content-Type: application/json; charset=utf-8');
         
         try 
@@ -127,8 +132,8 @@ class Tb_Historico_Diario extends Base
             // Buscar registros individuais de água
             $registrosAgua = $this->listarAguaPorData();
 
-            //Retornar tudo em JSON
-            echo json_encode([
+            // Retornar tudo em JSON
+            $resultado = [
                 'sucesso'                   => true,
                 'data'                      => $this->data,
                 'total_agua_ml'             => (int)($totais['total_ml'] ?? 0),
@@ -136,7 +141,12 @@ class Tb_Historico_Diario extends Base
                 'total_minutos_exercicio'   => (int)($totaisExercicio['total_minutos_exercicio'] ?? 0),
                 'total_registros_exercicio' => (int)($totaisExercicio['total_registros_exercicio'] ?? 0),
                 'detalhes_agua'             => $registrosAgua
-            ], JSON_UNESCAPED_UNICODE);
+            ];
+            
+            $json = json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            header('Content-Length: ' . strlen($json));
+            echo $json;
+            exit(0);
 
         } 
         catch (Exception $e) 

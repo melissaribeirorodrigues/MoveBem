@@ -41,7 +41,10 @@ try {
             break;  
         case 'Alterar':
             $Tb_Usuario->AlterarDadosUsuario();
-            break;   
+            break;
+        case 'AlterarSenha':
+            $Tb_Usuario->AlterarSenha();
+            break;
         case 'Excluir':
             $Tb_Usuario->Excluir();
             break; 
@@ -53,6 +56,9 @@ try {
             break; 
         case 'Login':
             $Tb_Usuario->LoginComEmailSenha();
+            break;
+        case 'RecuperarSenha':
+            $Tb_Usuario->RecuperarSenha();
             break;   
         default:
             $banco->setMensagem(1,'Operacao informada nao tratada');

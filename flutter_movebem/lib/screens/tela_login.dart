@@ -275,7 +275,7 @@ class _TelaLoginState extends State<TelaLogin> {
               // Esqueceu sua senha?
               TextButton(
                 onPressed: () {
-                  // TODO: Navegar para tela de recuperação de senha
+                  Navigator.pushNamed(context, '/recuperar_senha');
                 },
                 child: const Text(
                   'Esqueceu sua senha?',

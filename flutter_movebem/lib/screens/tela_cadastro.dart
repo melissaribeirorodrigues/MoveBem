@@ -63,7 +63,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
     try {
       // Envia senha em texto simples - o backend faz o hash com password_hash()
-      print('Enviando senha em texto simples');
       final response = await http.post(
         Uri.parse('$baseUrl/Controller/CrudUsuario.php'),
         body: {
@@ -73,9 +72,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
           'senha': senha, // Senha em texto simples
         },
       );
-
-
-  print('Resposta servidor (cadastro): ${response.statusCode} ${response.body}');
 
       setState(() {
         _carregando = false;

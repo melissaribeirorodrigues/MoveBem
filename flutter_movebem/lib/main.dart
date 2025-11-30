@@ -10,6 +10,7 @@ import 'screens/tela_agua.dart';
 import 'screens/tela_descricao_exercicio.dart';
 import 'screens/tela_perfil.dart';
 import 'screens/tela_historico.dart';
+import 'screens/tela_recuperar_senha.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/treino_acontecendo': (context) => const TelaTreinoAcontecendo(),
         '/descricao_exercicio': (context) => const TelaDescricaoExercicio(),
         '/historico': (context) => const TelaHistorico(),
+        '/recuperar_senha': (context) => const TelaRecuperarSenha(),
       },
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'dart:convert' show json;
 import 'package:http/http.dart' as http;
 
 class TelaPerfil extends StatefulWidget {
@@ -135,13 +135,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
               // ✅ HISTÓRICO FUNCIONANDO
               GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/historico',
-                    arguments: {
-                      'id_usuario': dadosUsuario?['id_usuario'],
-                    },
-                  );
+                  Navigator.pushNamed(context, '/historico');
                 },
                 child: Container(
                   width: double.infinity,
@@ -330,9 +324,301 @@ class _TelaPerfilState extends State<TelaPerfil> {
     );
   }
 
-  // 🔧 Diálogos (mesmos que antes)
-  void _mostrarDialogoEditarNome() {}
-  void _mostrarDialogoAlterarSenha() {}
-  void _mostrarDialogoSair() {}
-  void _mostrarDialogoExcluirConta() {}
+  void _mostrarDialogoEditarNome() {
+    final TextEditingController nomeController = TextEditingController(text: nomeUsuario);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar Nome'),
+        content: TextField(
+          controller: nomeController,
+          decoration: const InputDecoration(
+            labelText: 'Novo nome',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final novoNome = nomeController.text.trim();
+              if (novoNome.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nome não pode estar vazio')),
+                );
+                return;
+              }
+
+              try {
+                final url = Uri.parse('$baseUrl/Controller/CrudUsuario.php');
+                final response = await http.post(url, body: {
+                  'oper': 'Alterar',
+                  'id_usuario': dadosUsuario?['id_usuario'].toString() ?? '',
+                  'nm_usuario': novoNome,
+                  'ds_email': email,
+                });
+
+                if (response.statusCode == 200) {
+                  final data = json.decode(response.body);
+                  if (data['NumMens'] == 1) {
+                    // Atualiza SharedPreferences
+                    final prefs = await SharedPreferences.getInstance();
+                    dadosUsuario?['nm_usuario'] = novoNome;
+                    await prefs.setString('usuario', json.encode(dadosUsuario));
+
+                    setState(() {
+                      nomeUsuario = novoNome;
+                    });
+                    
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nome alterado com sucesso!')),
+                      );
+                    }
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(data['mensagem'] ?? 'Erro ao alterar nome')),
+                      );
+                    }
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Erro ao conectar com servidor')),
+                  );
+                }
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoAlterarSenha() {
+    final TextEditingController senhaAtualController = TextEditingController();
+    final TextEditingController novaSenhaController = TextEditingController();
+    final TextEditingController confirmarSenhaController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Alterar Senha'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: senhaAtualController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Senha atual',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: novaSenhaController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nova senha',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmarSenhaController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirmar senha',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final senhaAtual = senhaAtualController.text;
+              final novaSenha = novaSenhaController.text;
+              final confirmarSenha = confirmarSenhaController.text;
+
+              if (senhaAtual.isEmpty || novaSenha.isEmpty || confirmarSenha.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Preencha todos os campos')),
+                );
+                return;
+              }
+
+              if (novaSenha != confirmarSenha) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('As senhas não coincidem')),
+                );
+                return;
+              }
+
+              if (novaSenha.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Senha deve ter no mínimo 6 caracteres')),
+                );
+                return;
+              }
+
+              try {
+                // Primeiro valida a senha atual fazendo login
+                final urlLogin = Uri.parse('$baseUrl/Controller/CrudUsuario.php');
+                final responseLogin = await http.post(urlLogin, body: {
+                  'oper': 'Login',
+                  'email': email,
+                  'senha': senhaAtual,
+                });
+
+                if (responseLogin.statusCode == 200) {
+                  final dataLogin = json.decode(responseLogin.body);
+                  
+                  if (dataLogin['NumMens'] != 1) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Senha atual incorreta')),
+                      );
+                    }
+                    return;
+                  }
+
+                  // Se a senha atual tá correta, atualiza pra nova
+                  final url = Uri.parse('$baseUrl/Controller/CrudUsuario.php');
+                  final response = await http.post(url, body: {
+                    'oper': 'AlterarSenha',
+                    'id_usuario': dadosUsuario?['id_usuario'].toString() ?? '',
+                    'ds_senha': novaSenha,
+                  });
+
+                  if (response.statusCode == 200) {
+                    final data = json.decode(response.body);
+                    if (data['NumMens'] == 1) {
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Senha alterada com sucesso!')),
+                        );
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(data['mensagem'] ?? 'Erro ao alterar senha')),
+                        );
+                      }
+                    }
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Erro ao conectar com servidor')),
+                  );
+                }
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoSair() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('usuario');
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
+            child: const Text('Sair', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoExcluirConta() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Conta'),
+        content: const Text('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                final url = Uri.parse('$baseUrl/Controller/CrudUsuario.php');
+                final response = await http.post(url, body: {
+                  'oper': 'Excluir',
+                  'id_usuario': dadosUsuario?['id_usuario'].toString() ?? '',
+                });
+
+                if (response.statusCode == 200) {
+                  final data = json.decode(response.body);
+                  if (data['NumMens'] == 1) {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('usuario');
+                    
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Conta excluída com sucesso')),
+                      );
+                    }
+                  } else {
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(data['mensagem'] ?? 'Erro ao excluir conta')),
+                      );
+                    }
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Erro ao conectar com servidor')),
+                  );
+                }
+              }
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
